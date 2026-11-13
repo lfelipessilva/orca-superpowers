@@ -1,10 +1,16 @@
 {
-  "name": "superpowers",
+  "name": "superpowers-orca",
   "version": "7.0.2",
-  "description": "Superpowers skills and runtime bootstrap for coding agents",
+  "description": "Orca-first Superpowers skills and orchestration engine for heterogeneous multi-agent development",
   "type": "module",
   "main": ".opencode/plugins/superpowers.js",
+  "scripts": {
+    "test:orca": "bash tests/orca/run-all-orca-tests.sh"
+  },
   "keywords": [
+    "orca",
+    "orchestration",
+    "multi-agent",
     "pi-package",
     "skills",
     "tdd",

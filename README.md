@@ -1,4 +1,8 @@
-# Superpowers
+# Superpowers (Orca-Native Fork)
+
+> **Superpowers-Orca** integrates Jesse Vincent's battle-tested software engineering discipline with the **Orca Orchestration Engine** (`orca orchestration`, `orca worktree`). Replace generic subagents with supervised Orca Workers, execute non-blocking Task DAGs, make decisions via Orca Decision Gates (`gate-create`), and unleash heterogeneous multi-agent teams (Codex, Claude, Antigravity, Devin).
+>
+> 📖 See [Orca Integration Guide](docs/orca-integration-guide.md) for complete details.
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
