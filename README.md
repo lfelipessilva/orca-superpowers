@@ -1,16 +1,22 @@
 # Superpowers (Orca-Native Fork)
 
+[![CI](https://github.com/lfelipessilva/superpowers/actions/workflows/ci.yml/badge.svg)](https://github.com/lfelipessilva/superpowers/actions/workflows/ci.yml)
+[![Sync Upstream](https://github.com/lfelipessilva/superpowers/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/lfelipessilva/superpowers/actions/workflows/sync-upstream.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 > **Superpowers-Orca** integrates Jesse Vincent's battle-tested software engineering discipline with the **Orca Orchestration Engine** (`orca orchestration`, `orca worktree`). Replace generic subagents with supervised Orca Workers, execute non-blocking Task DAGs, make decisions via Orca Decision Gates (`gate-create`), and unleash heterogeneous multi-agent teams (Codex, Claude, Antigravity, Devin).
 >
-> 📖 See [Orca Integration Guide](docs/orca-integration-guide.md) for complete details.
+> 📖 See [Orca Integration Guide](docs/orca-integration-guide.md) for architecture, commands, and walkthroughs.
 
 Superpowers is a complete software development methodology for your coding agents, built on top of a set of composable skills and some initial instructions that make sure your agent uses them.
 
 ## Table of Contents
 
 - [How it works](#how-it-works)
+- [Orca Orchestration Highlights](#orca-orchestration-highlights)
 - [Commercial Services](#commercial-services)
 - [Getting Started](#installation)
+  - [Orca (First-Class Orchestration)](#orca-first-class-orchestration)
   - [Claude Code](#claude-code)
   - [Antigravity](#antigravity)
   - [Codex App](#codex-app)
@@ -32,6 +38,7 @@ Superpowers is a complete software development methodology for your coding agent
 - [Community](#community)
 - [What's Inside](#whats-inside)
 - [Philosophy](#philosophy)
+- [Syncing with Upstream Superpowers](#syncing-with-upstream-superpowers)
 - [Contributing](#contributing)
 - [Updating](#updating)
 - [License](#license)
@@ -45,9 +52,19 @@ Once it's teased a spec out of the conversation, it shows it to you in chunks sh
 
 After you've signed off on the design, your agent puts together an implementation plan that's clear enough for an enthusiastic junior engineer with poor taste, no judgement, no project context, and an aversion to testing to follow. It emphasizes true red/green TDD, YAGNI (You Aren't Gonna Need It), and DRY. 
 
-Next up, once you say "go", it launches a *subagent-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
+Next up, once you say "go", it launches a *worker-driven-development* process, having agents work through each engineering task, inspecting and reviewing their work, and continuing forward. It's not uncommon for your agent to work autonomously for a couple hours at a time without deviating from the plan you put together.
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
+
+## Orca Orchestration Highlights
+
+In this fork, the execution layer is supercharged by the Orca runtime:
+
+* 🤖 **Supervised Workers**: Replaces in-process subagent tools with dedicated Orca workers (`orca orchestration worker-start`) having isolated contexts and dedicated UI tabs.
+* 🔀 **Heterogeneous Multi-Agent Teams**: Mix and match agents. Have **Codex** write the code and tests, then dispatch **Claude** or **Antigravity** to review it, eliminating single-model blind spots.
+* 📊 **Task DAGs**: Real execution graphs (`run-create`, `task-create --deps`, `task-list --ready`) that enforce order and concurrency.
+* 🚦 **Non-Blocking Decision Gates**: When an architectural ambiguity or destructive action requires human alignment, `gate-create` pauses *only that specific task* while all independent tasks in the DAG keep executing!
+* 🌿 **Orca Native Worktrees**: Automatically uses Orca child worktrees (`--worktree new-child`) and updates UI status comments (`orca worktree set --comment`).
 
 ## Commercial Services
 
@@ -56,6 +73,35 @@ If you're using Superpowers in enterprise and could benefit from commercial supp
 ## Installation
 
 Installation differs by harness. If you use more than one, install Superpowers separately for each one.
+
+### Orca (First-Class Orchestration)
+
+Superpowers-Orca installs directly into the shared agent directory, making all skills available to Orca, Codex, Claude, Antigravity, and Devin.
+
+#### Quick Global Install (Recommended)
+
+Run the included installer to link the skills into `~/.agents/skills/`:
+
+```bash
+git clone https://github.com/lfelipessilva/superpowers.git ~/.superpowers-orca
+~/.superpowers-orca/scripts/install.sh --global
+```
+
+#### Project-Local Install
+
+To install skills only in the current project repository (`.agents/skills/`):
+
+```bash
+/path/to/superpowers-orca/scripts/install.sh --local
+```
+
+#### Verification
+
+Check that your Orca installation detects the skills:
+
+```bash
+orca skills list
+```
 
 ### Claude Code
 
@@ -345,6 +391,13 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 
 ### Skills Library
 
+**Orca Orchestration & Multi-Agent (Orca-Native)**
+- **worker-driven-development** - Orchestrate Task DAGs using supervised Orca workers with isolated contexts (`--agent codex|claude|devin|antigravity`)
+- **orca-decision-gates** - Non-blocking decision gates (`gate-create` / `gate-resolve`) for human alignment without pausing independent tasks
+- **cross-agent-review** - Heterogeneous model code review (e.g., Codex implements, Claude reviews)
+- **using-orca-worktrees** - Native Orca child worktree isolation with sidebar comment updates
+- **dispatching-parallel-workers** - Concurrently solve independent test/module failures in isolated child worktrees
+
 **Testing**
 - **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
 
@@ -376,6 +429,24 @@ Superpowers is built by [Jesse Vincent](https://blog.fsck.com) and the rest of t
 - **Evidence over claims** - Verify before declaring success
 
 Read [the original release announcement](https://blog.fsck.com/2025/10/09/superpowers/).
+
+## Syncing with Upstream Superpowers
+
+This fork is designed to stay continually synchronized with Jesse Vincent's upstream repository (`obra/superpowers`) so you always receive new skills, tuning improvements, and core bug fixes.
+
+### Automated Sync (GitHub Actions)
+A preconfigured GitHub Action ([.github/workflows/sync-upstream.yml](.github/workflows/sync-upstream.yml)) runs every Monday at 00:00 UTC (and can be triggered manually via GitHub's "Run workflow" button). It pulls `upstream/main`, executes the Orca test suite, and updates the fork.
+
+### Local CLI Sync
+You can also sync manually at any time using the bundled helper script:
+
+```bash
+# Preview incoming changes without merging:
+./scripts/sync-upstream.sh --check-only
+
+# Fetch, merge, and verify test suite:
+./scripts/sync-upstream.sh
+```
 
 ## Contributing
 

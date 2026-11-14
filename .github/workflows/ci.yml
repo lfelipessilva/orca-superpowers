@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test:
+    name: Orca & Skills Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Orca Test Suite
+        run: |
+          bash tests/orca/run-all-orca-tests.sh
+
+      - name: Test Installer Script
+        run: |
+          bash scripts/install.sh --local
+          # Verify installed files in .agents/skills
+          [ -d .agents/skills/worker-driven-development ] || exit 1
+          [ -d .agents/skills/orca-decision-gates ] || exit 1
+          bash scripts/install.sh --local --uninstall

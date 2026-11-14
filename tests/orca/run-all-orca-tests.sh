@@ -14,6 +14,7 @@ test_scripts=(
   "$SCRIPT_DIR/test-decision-gates.sh"
   "$SCRIPT_DIR/test-cross-agent-review.sh"
   "$SCRIPT_DIR/test-parallel-workers.sh"
+  "$SCRIPT_DIR/test-scripts.sh"
   "$REPO_ROOT/tests/skill-layout/test-no-dev-files-in-skills.sh"
 )
 

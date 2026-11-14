@@ -1,0 +1,60 @@
+name: Sync Upstream Superpowers
+
+on:
+  schedule:
+    # Runs every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  sync:
+    name: Sync with obra/superpowers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add and Fetch Upstream
+        run: |
+          git remote add upstream https://github.com/obra/superpowers.git
+          git fetch upstream main
+
+      - name: Check for New Upstream Commits
+        id: check
+        run: |
+          BEHIND_COUNT=$(git rev-list --count HEAD..upstream/main)
+          echo "behind_count=$BEHIND_COUNT" >> $GITHUB_OUTPUT
+          if [ "$BEHIND_COUNT" -eq 0 ]; then
+            echo "Already up to date."
+          else
+            echo "Found $BEHIND_COUNT new commits in upstream."
+          fi
+
+      - name: Merge Upstream Changes
+        if: steps.check.outputs.behind_count > 0
+        run: |
+          git merge upstream/main -m "chore(upstream): sync changes from obra/superpowers"
+
+      - name: Run Orca Test Suite
+        if: steps.check.outputs.behind_count > 0
+        run: |
+          bash tests/orca/run-all-orca-tests.sh
+
+      - name: Push to main
+        if: steps.check.outputs.behind_count > 0
+        run: |
+          git push origin main
