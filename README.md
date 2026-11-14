@@ -1,7 +1,7 @@
 # Superpowers (Orca-Native Fork)
 
-[![CI](https://github.com/lfelipessilva/superpowers/actions/workflows/ci.yml/badge.svg)](https://github.com/lfelipessilva/superpowers/actions/workflows/ci.yml)
-[![Sync Upstream](https://github.com/lfelipessilva/superpowers/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/lfelipessilva/superpowers/actions/workflows/sync-upstream.yml)
+[![CI](https://github.com/lfelipessilva/orca-superpowers/actions/workflows/ci.yml/badge.svg)](https://github.com/lfelipessilva/orca-superpowers/actions/workflows/ci.yml)
+[![Sync Upstream](https://github.com/lfelipessilva/orca-superpowers/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/lfelipessilva/orca-superpowers/actions/workflows/sync-upstream.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Superpowers-Orca** integrates Jesse Vincent's battle-tested software engineering discipline with the **Orca Orchestration Engine** (`orca orchestration`, `orca worktree`). Replace generic subagents with supervised Orca Workers, execute non-blocking Task DAGs, make decisions via Orca Decision Gates (`gate-create`), and unleash heterogeneous multi-agent teams (Codex, Claude, Antigravity, Devin).
@@ -83,7 +83,7 @@ Superpowers-Orca installs directly into the shared agent directory, making all s
 Run the included installer to link the skills into `~/.agents/skills/`:
 
 ```bash
-git clone https://github.com/lfelipessilva/superpowers.git ~/.superpowers-orca
+git clone https://github.com/lfelipessilva/orca-superpowers.git ~/.superpowers-orca
 ~/.superpowers-orca/scripts/install.sh --global
 ```
 
