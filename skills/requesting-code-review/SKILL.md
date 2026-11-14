@@ -7,6 +7,13 @@ description: Use when completing tasks, implementing major features, or before m
 
 Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history.
 
+## Orca override (this fork)
+
+If Orca is available, **do not dispatch a harness subagent for review**. Use
+`superpowers:cross-agent-review` (`orca orchestration worker-start` with a
+different `--agent` family than the implementer). This skill remains the
+fallback when Orca is unavailable.
+
 **Core principle:** Review early, review often.
 
 ## When to Request Review

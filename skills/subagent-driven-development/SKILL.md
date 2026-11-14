@@ -7,6 +7,16 @@ description: Use when executing implementation plans with independent tasks in t
 
 Execute plan by dispatching a fresh implementer subagent per task, a task review (spec compliance + code quality) after each, and a broad whole-branch review at the end.
 
+## Orca override (this fork)
+
+If `command -v orca` succeeds and `orca worktree current` succeeds (or you are
+in an Orca-managed workspace), **stop using this skill**. Switch to
+`superpowers:worker-driven-development` unless your human partner explicitly
+insisted on in-process harness subagents after being offered Worker-driven.
+
+Do not "research with a subagent" whether Antigravity/Codex/Grok exist — use
+`orca account list`, `orca agent-context`, and `orca orchestration worker-start --help`.
+
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
 **Core principle:** Fresh subagent per task + task review (spec + quality) + broad final review = high quality, fast iteration

@@ -80,7 +80,7 @@ orca orchestration worker-start \
   --agent codex
 ```
 
-*(Use `--worktree current` if working in place without parallel collision risk).*
+*(Use `--worktree current` only when this coordinator session's worktree **is** the target repo. If the Cursor/Orca chat is open in another folder — e.g. the skills repo — `current` points at the wrong tree. Prefer an explicit selector: `--worktree path:/abs/path/to/target` or `id:<repo-id>::<path>`, and always pass `--run <run_id>` so reviews do not spawn a new Run.)*
 
 ### Step 4: End Turn (Reactive Wakeup Rule)
 

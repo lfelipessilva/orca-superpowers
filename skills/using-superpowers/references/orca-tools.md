@@ -2,6 +2,24 @@
 
 Skills speak in declarative actions ("dispatch a subagent", "create a todo", "read a file", "request code review"). In the Orca runtime environment, these resolve to the native Orca CLI commands and orchestration primitives below.
 
+## Hard rule: workers, not harness subagents
+
+When Orca is available (`command -v orca` and a usable worktree), **never** use
+the host harness's Task / Explore / `invoke_subagent` / in-process subagent tools
+for plan execution, review, parallel fixes, or agent discovery.
+
+| Temptation | Do this instead |
+|------------|-----------------|
+| Cursor Task / Explore "is antigravity a model?" | `orca account list`; `orca orchestration worker-start --help`; `--agent antigravity` |
+| `subagent-driven-development` after a plan | `worker-driven-development` (`run-create` → `task-create` → `worker-start`) |
+| `dispatching-parallel-agents` | `dispatching-parallel-workers` (`--worktree new-child`) |
+| `requesting-code-review` subagent | `cross-agent-review` via `worker-start --agent <other-family>` |
+| `--worktree current` while chat is in another repo | Explicit `--worktree path:/abs/target` (or `id:…`) **and** `--run <run_id>` |
+| Polling `worker-show` / sleep loops | End turn; Orca wakes on `worker_done` / `ask` / gate resolve |
+
+Antigravity is an Orca `--agent` id, not a Cursor Task model slug. Grok on Cursor
+workers is `--agent cursor --model <provider-model-id>`.
+
 ## Action Mapping Table
 
 | Action skills request | Orca equivalent |

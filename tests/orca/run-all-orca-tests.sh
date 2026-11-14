@@ -11,6 +11,7 @@ test_scripts=(
   "$SCRIPT_DIR/test-tool-mapping.sh"
   "$SCRIPT_DIR/test-using-orca-worktrees.sh"
   "$SCRIPT_DIR/test-worker-driven-development.sh"
+  "$SCRIPT_DIR/test-writing-plans-orca-handoff.sh"
   "$SCRIPT_DIR/test-decision-gates.sh"
   "$SCRIPT_DIR/test-cross-agent-review.sh"
   "$SCRIPT_DIR/test-parallel-workers.sh"

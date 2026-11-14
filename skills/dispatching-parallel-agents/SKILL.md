@@ -5,6 +5,13 @@ description: Use when facing 2+ independent tasks that can be worked on without 
 
 # Dispatching Parallel Agents
 
+## Orca override (this fork)
+
+If Orca is available, **do not use this skill**. Use
+`superpowers:dispatching-parallel-workers` (`orca orchestration worker-start`
+with `--worktree new-child`). Harness Task/Explore subagents are the fallback
+only when Orca is unavailable.
+
 ## Overview
 
 You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
