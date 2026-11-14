@@ -9,6 +9,19 @@ Dispatch independent code review workers using heterogeneous agent pairing (e.g.
 
 ---
 
+## Selective review (when to dispatch)
+
+Only run this skill when the parent task is **WDD class `dense`** (or your human partner explicitly asks for review).
+
+| WDD class | Action |
+| :--- | :--- |
+| **wiring** / **scaffold** | **Skip** cross-agent review. Coordinator marks the task completed from implementer `worker_done` + tests. |
+| **dense** | **Required** — continue below with a different agent family. |
+
+Do not burn a reviewer worker on scaffold/wiring unless asked.
+
+---
+
 ## The Heterogeneous Review Principle
 
 > **Never allow an agent model to review code written by the same model family when an alternative agent is available.**

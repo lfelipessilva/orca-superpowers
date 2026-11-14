@@ -94,6 +94,9 @@ owns the code, in that task's own step style.]
 ````markdown
 ### Task N: [Component Name]
 
+**WDD class:** wiring | scaffold | dense
+(Optional. Guides selective review + effort in `wdd-boot.sh`: wiring/scaffold skip cross-review; dense requires it.)
+
 **Files:**
 - Create: `exact/path/to/file.py`
 - Modify: `exact/path/to/existing.py:123-145`
@@ -188,9 +191,11 @@ them to review the plan and choose an execution method before implementation.
 is usable: `command -v orca` succeeds **and** `orca worktree current` succeeds
 (or you are clearly inside an Orca-managed workspace). If yes, **Worker-driven
 is the default** — recommend it, and do not steer toward Subagent-driven unless
-your human partner explicitly asks for in-process subagents. Agent discovery and
-plan research go through `orca account list` / `orca agent-context` / CLI help,
-never harness Task/Explore/subagents (see `using-superpowers/references/orca-tools.md`).
+your human partner explicitly asks for in-process subagents. Resolve agent/model
+ids via `bash ~/.agents/skills/worker-driven-development/scripts/wdd models --ids-only`
+(or the skill's `scripts/wdd`) — never harness Task/Explore/subagents and never a
+multi-command `account list` / `agent-context` / `agy` tour (see
+`using-superpowers/references/orca-tools.md`).
 
 **When no execution method has already been supplied:**
 

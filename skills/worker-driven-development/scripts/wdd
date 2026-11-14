@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Low-token helpers for the WDD coordinator. Prefer these over raw orca dumps.
+#
+#   wdd boot --plan PLAN --agent AGENT […]
+#   wdd models [--agent NAME] [--ids-only]
+#   wdd agents [--json]          # brief auth map (not full account list)
+#   wdd ready --run RUN_ID       # ready tasks only
+#   wdd workers --run RUN_ID     # compact worker rows
+#   wdd refresh-models           # regenerate model-catalog.yaml (rare)
+#   wdd path                     # print this skill's scripts dir
+set -euo pipefail
+
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPTS="$SKILL_DIR/scripts"
+ORCA_BIN="${ORCA_CLI_COMMAND:-orca}"
+
+cmd="${1:-}"
+[[ -n "$cmd" ]] || { sed -n '2,12p' "$0"; exit 2; }
+shift || true
+
+case "$cmd" in
+  path) echo "$SCRIPTS" ;;
+  boot) exec bash "$SCRIPTS/wdd-boot.sh" "$@" ;;
+  models) exec bash "$SCRIPTS/list-model-catalog.sh" "$@" ;;
+  refresh-models) exec bash "$SCRIPTS/refresh-model-catalog.sh" "$@" ;;
+  agents) exec bash "$SCRIPTS/agents-brief.sh" "$@" ;;
+  ready) exec bash "$SCRIPTS/ready-brief.sh" "$@" ;;
+  workers) exec bash "$SCRIPTS/workers-brief.sh" "$@" ;;
+  -h|--help|help) sed -n '2,12p' "$0" ;;
+  *) echo "unknown command: $cmd (try: boot models agents ready workers refresh-models path)" >&2; exit 2 ;;
+esac

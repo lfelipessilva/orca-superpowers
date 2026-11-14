@@ -14,8 +14,9 @@ in an Orca-managed workspace), **stop using this skill**. Switch to
 `superpowers:worker-driven-development` unless your human partner explicitly
 insisted on in-process harness subagents after being offered Worker-driven.
 
-Do not "research with a subagent" whether Antigravity/Codex/Grok exist — use
-`orca account list`, `orca agent-context`, and `orca orchestration worker-start --help`.
+Do not "research with a subagent" whether Antigravity/Codex/Grok exist — run
+`bash ~/.agents/skills/worker-driven-development/scripts/wdd agents` /
+`wdd models --ids-only`. Do not tour `agy` / `agent-context`.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 

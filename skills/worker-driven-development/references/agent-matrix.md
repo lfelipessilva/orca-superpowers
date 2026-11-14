@@ -25,10 +25,24 @@ Cross-agent evaluation eliminates family-specific cognitive blind spots (e.g. mo
 
 ---
 
+## Model catalog (edit this, don't probe CLIs)
+
+Opaque `--model` / `--effort` ids for **antigravity**, **claude**, **cursor**, and **opencode** live in [model-catalog.yaml](model-catalog.yaml).
+
+- Edit the YAML by hand, or: `bash scripts/wdd refresh-models`
+- Low-token list: `bash scripts/wdd models [--agent NAME] [--ids-only]`
+- Auth map: `bash scripts/wdd agents [--ok-only]`
+- Upstream wish: `orca models list --agent <id> --ids-only` (not shipped — catalog + `wdd` are the stand-in)
+
+| Agent | How to pass model |
+| :--- | :--- |
+| **antigravity** | `--model gemini-3.8-flash --effort medium` (or compound `gemini-3.8-flash-medium`) |
+| **claude** | `--model sonnet\|opus\|claude-sonnet-4-6` + optional `--effort` |
+| **cursor** | `--model <id>` only (effort usually baked into the id, e.g. `-high`, `-fast`) |
+| **opencode** | `--model opencode/beam-free` (+ `--effort` when the host accepts it) |
+
 ## Agent Fallback Hierarchy
 
-If a target agent is not authenticated on the host machine (`orca account list`):
+If a target agent is not authenticated on the host machine (at most one `orca account list --json`):
 1. Fall back to the active coordinator's agent engine.
-2. If changing models within the same agent, vary reasoning effort:
-   - Implementation: `--effort medium`
-   - Code Review: `--effort high`
+2. If changing models within the same agent, pick ids from `model-catalog.yaml` / `defaults.effort` — do not run provider CLIs to rediscover them.

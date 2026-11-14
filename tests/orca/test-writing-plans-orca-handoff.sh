@@ -42,6 +42,12 @@ grep -q "dispatching-parallel-workers" "$ORCA_TOOLS" \
   || fail "orca-tools.md must route parallel work to workers"
 grep -q "cross-agent-review" "$ORCA_TOOLS" \
   || fail "orca-tools.md must route review to cross-agent-review"
+grep -q "wdd models" "$ORCA_TOOLS" \
+  || fail "orca-tools.md must route model lookup to wdd models"
+grep -q "wdd agents" "$ORCA_TOOLS" \
+  || fail "orca-tools.md must route auth lookup to wdd agents"
+grep -q "wdd models" "$PLANS" \
+  || fail "writing-plans must resolve models via wdd models"
 
 grep -q "Orca override" "$PARALLEL" \
   || fail "dispatching-parallel-agents must document Orca override"

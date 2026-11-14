@@ -32,6 +32,14 @@ grep -qi "heterogeneous" "$SKILL_FILE" \
 grep -qi "read-only" "$SKILL_FILE" \
   || fail "SKILL.md does not document read-only review constraint"
 
+# --- Selective review policy ------------------------------------------------
+grep -q "Selective review" "$SKILL_FILE" \
+  || fail "SKILL.md must document Selective review"
+grep -q "wiring" "$SKILL_FILE" \
+  || fail "SKILL.md must mention wiring class (skip cross-review)"
+grep -q "dense" "$SKILL_FILE" \
+  || fail "SKILL.md must mention dense class (require cross-review)"
+
 # --- Template checks --------------------------------------------------------
 grep -q "git diff" "$TEMPLATE_FILE" \
   || fail "template does not include git diff inspection command"

@@ -9,6 +9,62 @@ Execute implementation plans in Orca by orchestrating supervised workers across 
 
 **Core principle:** Fresh worker per task + Cross-agent review (e.g. Codex implements, Claude reviews) + Non-blocking Decision Gates = fast, reliable, industrial-grade delivery.
 
+**Coordinator CLI (prefer scripts over raw Orca dumps):** after `install.sh --global`,
+
+```bash
+WDD=~/.agents/skills/worker-driven-development/scripts/wdd
+# from this skill tree: bash scripts/wdd …
+bash "$WDD" boot --plan <plan.md> --agent <id> [--model …] [--effort …]
+bash "$WDD" models --agent antigravity --ids-only
+bash "$WDD" agents [--ok-only]          # NOT raw account list --json
+bash "$WDD" ready --run <run_id>
+bash "$WDD" workers --run <run_id>
+```
+
+Model ids also live in [references/model-catalog.yaml](references/model-catalog.yaml). Never tour `agy` / `agent models` / `agent-context`.
+
+---
+
+## Lean coordinator
+
+Your job is dispatch, not implementation. Minimize tokens every turn.
+
+1. **Bootstrap once** with `wdd boot …`. Then **end turn**.
+2. **On wakeup — one action, then end turn.** Map the event and stop:
+   - `ask` → `reply` (or `gate-create` if a real fork)
+   - `worker_done` + tests green + class `wiring`/`scaffold` → `task-update --status completed`, then `wdd ready` + `worker-start` newly ready (selective review: skip)
+   - `worker_done` + class `dense` → dispatch cross-agent review only; do not also inspect the diff yourself
+   - review `APPROVED` → complete parent task + start next ready
+   - review `CHANGES_REQUESTED` → `send` findings to implementer
+   - failed/stopped → `wdd workers --run …`, follow receipt `next`; no exploration tour
+3. **Do not** re-read the whole plan, `orca skills get --full`, worker transcripts, or local `git diff` on the happy path. Trust `worker_done` evidence; open artifacts only on failure.
+4. **Narration ≤ one short line** per turn (or silence). Specs are plan pointers — see [templates/worker-spec-template.md](templates/worker-spec-template.md).
+5. **Need auth/models?** `wdd agents` / `wdd models` only — never raw `account list --json` or `agent-context`.
+
+---
+
+## Selective review
+
+Tag each task with **WDD class** (`**WDD class:** wiring|scaffold|dense` in the plan, or let `wdd boot` infer):
+
+| Class | Typical work | Effort hint | Cross-agent review |
+| :--- | :--- | :--- | :--- |
+| **wiring** | shared clients, thin adapters | low | **skip** (implementer self-check + tests) |
+| **scaffold** | repo/auth/setup, medium APIs | medium | **skip** |
+| **dense** | videos/carousels/web, pipe boundaries | high | **required** (`cross-agent-review`) |
+
+Never skip review on `dense`. Never pay for heterogeneous review on `wiring`/`scaffold` unless your human partner asks.
+
+---
+
+## Dispatch without a discovery tour
+
+When your human partner names `--agent` / `--model` / `--effort`, pass them straight into `wdd boot` / `worker-start`. Resolve unknown ids with `wdd models`. If the agent family itself is unknown, **one** `wdd agents` (not raw account list).
+
+**Do not:** `agy models`, `agent models`, `claude models`, `find` for runtimes, `orca agent-context`, raw `account list --json`, or `--help` fishing before the first start.
+
+Effort when unspecified: use class hints above / `defaults.effort` in the catalog.
+
 ---
 
 ## Why Orca Workers instead of Subagents
@@ -23,121 +79,27 @@ Execute implementation plans in Orca by orchestrating supervised workers across 
 ## The WDD Coordinator Loop
 
 ```text
-1. Initialize Run   → orca orchestration run-create --objective "<goal>"
-2. Populate DAG     → orca orchestration task-create --spec "<spec>" [--deps '<json>']
-3. Dispatch Ready   → orca orchestration task-list --ready --brief
-                      orca orchestration worker-start --task <id> --agent <agent>
-4. Sleep & End Turn → Wait for reactive Orca wakeups (NO polling)
-5. On Wakeup        → Handle worker_done, answer questions, or resolve gates
-6. Cross-Review     → Dispatch review worker from a different agent family
-7. Repeat / Settle  → Next ready tasks until Run is complete
+1. Boot DAG        → bash scripts/wdd boot --plan <plan> --agent <id> [--model] [--effort]
+2. Sleep & End Turn → Wait for reactive Orca wakeups (NO polling)
+3. On Wakeup        → One action (Lean coordinator) then end turn
+4. Selective review → cross-agent only for WDD class dense
+5. Repeat / Settle  → Until all tasks completed
 ```
 
----
+Manual equivalent (avoid unless boot cannot run): `run-create` → `task-create` (plan-pointer specs + `--deps`) → `worker-start` ready.
 
-## Step-by-Step Execution
+*(Use `--worktree current` only when this session's worktree **is** the target repo. Prefer `--worktree path:/abs/target` or `id:…`, and always `--run <run_id>`.)*
 
-### Step 1: Initialize the Run
+### Decision Gates
 
-Create a lightweight Orca orchestration run to anchor this plan's lifecycle:
-
-```bash
-orca orchestration run-create --objective "Implement [Feature Name] per plan [Path]"
-```
-
-Orca binds this run to your coordinator session.
-
-### Step 2: Populate the Task DAG
-
-Read the implementation plan and register each bite-sized task. Encode dependencies explicitly using `--deps`:
-
-```bash
-# Task 1 (no dependencies)
-orca orchestration task-create --spec "Task 1: Core data models and schemas"
-
-# Task 2 (depends on Task 1)
-orca orchestration task-create --spec "Task 2: API routes and validation" --deps '["task_1"]'
-
-# Task 3 (depends on Task 2)
-orca orchestration task-create --spec "Task 3: Integration tests and documentation" --deps '["task_2"]'
-```
-
-### Step 3: Check Ready Tasks and Dispatch Workers
-
-Query which tasks have all dependencies satisfied:
-
-```bash
-orca orchestration task-list --ready --brief
-```
-
-For each ready task, select the optimal agent from [agent-matrix.md](references/agent-matrix.md) (e.g. `codex` for implementation):
-
-```bash
-orca orchestration worker-start \
-  --task <task_id> \
-  --worktree new-child \
-  --name "<short-task-name>" \
-  --agent codex
-```
-
-*(Use `--worktree current` only when this coordinator session's worktree **is** the target repo. If the Cursor/Orca chat is open in another folder — e.g. the skills repo — `current` points at the wrong tree. Prefer an explicit selector: `--worktree path:/abs/path/to/target` or `id:<repo-id>::<path>`, and always pass `--run <run_id>` so reviews do not spawn a new Run.)*
-
-### Step 4: End Turn (Reactive Wakeup Rule)
-
-**Never poll `check`, loop, or sleep in bash.**
-Once ready workers are dispatched, **end your turn immediately**. Orca will wake you when:
-- A worker finishes and reports `worker_done`.
-- A worker asks a clarifying question (`ask`).
-- An escalation or permission prompt arises.
-
-### Step 5: Handling Wake Events
-
-When Orca wakes you with incoming messages:
-
-1. **Worker Question (`question` / `ask`)**:
-   - If the answer is clear from the spec, answer immediately:
-     ```bash
-     orca orchestration reply --id <message_id> --body "<answer>"
-     ```
-   - If the question reveals a critical design fork, create a Decision Gate (see below).
-
-2. **Task Completion (`worker_done`)**:
-   - Inspect the worker's changes and test results.
-   - Dispatch a **Cross-Agent Task Reviewer** (Step 6).
-
-3. **Escalations (`stopReason` / `exited`)**:
-   - If a worker stopped without `worker_done`, steer it with `orca orchestration send` or restart it.
-
-### Step 6: Cross-Agent Review
-
-To avoid blind spots, dispatch a reviewer running on a **different agent engine** than the implementer (e.g., dispatch `claude` to review `codex`'s commit):
-
-```bash
-orca orchestration worker-start \
-  --spec "Review task <task_id> diff against spec. Read-only review on current worktree." \
-  --worktree current \
-  --agent claude
-```
-
-- If review passes (`APPROVED`): Mark the task complete:
-  ```bash
-  orca orchestration task-update --task <task_id> --status completed
-  ```
-- If review finds issues: Send the findings back to the implementer via `orca orchestration send`.
-
-### Step 7: Decision Gates for Human Blocks
-
-If a task hits an ambiguity requiring human preference or a high-risk operation, **never block the whole coordinator or abort**:
-Create an Orca Decision Gate:
+Ambiguity / high-risk consent → `gate-create` on that task only; other ready tasks keep running:
 
 ```bash
 orca orchestration gate-create \
   --task <task_id> \
-  --question "Should we use Option A (fast) or Option B (durable)?" \
+  --question "Option A or B?" \
   --options '["Option A", "Option B"]'
 ```
-
-Only `<task_id>` is blocked. Other independent ready tasks in the DAG continue executing!
 
 ---
 

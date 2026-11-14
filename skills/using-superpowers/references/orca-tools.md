@@ -10,15 +10,24 @@ for plan execution, review, parallel fixes, or agent discovery.
 
 | Temptation | Do this instead |
 |------------|-----------------|
-| Cursor Task / Explore "is antigravity a model?" | `orca account list`; `orca orchestration worker-start --help`; `--agent antigravity` |
-| `subagent-driven-development` after a plan | `worker-driven-development` (`run-create` → `task-create` → `worker-start`) |
+| Cursor Task / Explore "is antigravity a model?" | `--agent antigravity` + `bash ~/.agents/skills/worker-driven-development/scripts/wdd models` |
+| "What models exist?" / `agy` / `agent models` / `agent-context` | `wdd models --ids-only` (refresh: `wdd refresh-models` only when stale) |
+| Raw `orca account list --json` | `wdd agents` or `wdd agents --ok-only` |
+| Human already named agent/model/effort | `wdd boot` / `worker-start` with **zero** discovery commands |
+| Hand-rolling run + tasks + first workers | `wdd boot --plan <plan.md> --agent <id> […]` then end turn |
+| Who is ready / worker state | `wdd ready --run …` / `wdd workers --run …` |
+| Review every task | Selective: cross-agent only for WDD class `dense`; skip wiring/scaffold |
+| Coordinator essays / re-read plan each wake | Lean coordinator: one action → end turn |
+| `subagent-driven-development` after a plan | `worker-driven-development` (`wdd boot` or manual DAG) |
 | `dispatching-parallel-agents` | `dispatching-parallel-workers` (`--worktree new-child`) |
 | `requesting-code-review` subagent | `cross-agent-review` via `worker-start --agent <other-family>` |
 | `--worktree current` while chat is in another repo | Explicit `--worktree path:/abs/target` (or `id:…`) **and** `--run <run_id>` |
 | Polling `worker-show` / sleep loops | End turn; Orca wakes on `worker_done` / `ask` / gate resolve |
 
 Antigravity is an Orca `--agent` id, not a Cursor Task model slug. Grok on Cursor
-workers is `--agent cursor --model <provider-model-id>`.
+workers is `--agent cursor --model <provider-model-id>` from the catalog.
+
+**Upstream wish:** `orca models list --agent <id> --ids-only` (one line per id, no account/rate-limit blob). Until Orca ships it, the YAML + `list-model-catalog.sh` are the brief path.
 
 ## Action Mapping Table
 
