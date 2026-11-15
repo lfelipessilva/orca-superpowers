@@ -15,13 +15,18 @@ Execute implementation plans in Orca by orchestrating supervised workers across 
 WDD=~/.agents/skills/worker-driven-development/scripts/wdd
 # from this skill tree: bash scripts/wdd …
 bash "$WDD" boot --plan <plan.md> --agent <id> [--model …] [--effort …]
+bash "$WDD" status --run <run_id>         # compact run & worker summary (<6 lines)
+bash "$WDD" check --run <run_id>          # 1-line event summary on wakeup
+bash "$WDD" complete --run <run_id> --task <id> [--start-next]
+bash "$WDD" review --run <run_id> --task <id>  # automated cross-agent review
+bash "$WDD" config set <agent>.model <id> [--global|--local]
 bash "$WDD" models --agent antigravity --ids-only
-bash "$WDD" agents [--ok-only]          # NOT raw account list --json
+bash "$WDD" agents [--ok-only]             # NOT raw account list --json
 bash "$WDD" ready --run <run_id>
 bash "$WDD" workers --run <run_id>
 ```
 
-Model ids also live in [references/model-catalog.yaml](references/model-catalog.yaml). Never tour `agy` / `agent models` / `agent-context`.
+Smart defaults and flag sanitization (e.g. Antigravity requires `--model` with `--effort`; Cursor encodes effort in model IDs and strips `--effort`) are enforced automatically by `wdd`. Configure persistent defaults with `wdd config set <agent>.model <model>` or `.wddrc`.
 
 ---
 
@@ -31,15 +36,17 @@ Your job is dispatch, not implementation. Minimize tokens every turn.
 
 1. **Bootstrap once** with `wdd boot …`. Then **end turn**.
 2. **On wakeup — one action, then end turn.** Map the event and stop:
-   - `ask` → `reply` (or `gate-create` if a real fork)
-   - `worker_done` + tests green + class `wiring`/`scaffold` → `task-update --status completed`, then `wdd ready` + `worker-start` newly ready (selective review: skip)
-   - `worker_done` + class `dense` → dispatch cross-agent review only; do not also inspect the diff yourself
-   - review `APPROVED` → complete parent task + start next ready
-   - review `CHANGES_REQUESTED` → `send` findings to implementer
-   - failed/stopped → `wdd workers --run …`, follow receipt `next`; no exploration tour
-3. **Do not** re-read the whole plan, `orca skills get --full`, worker transcripts, or local `git diff` on the happy path. Trust `worker_done` evidence; open artifacts only on failure.
-4. **Narration ≤ one short line** per turn (or silence). Specs are plan pointers — see [templates/worker-spec-template.md](templates/worker-spec-template.md).
-5. **Need auth/models?** `wdd agents` / `wdd models` only — never raw `account list --json` or `agent-context`.
+   - Check the event: `wdd check --run <run_id>`
+   - `ask` → `orca orchestration reply --id <id> --body "..."` (or `gate-create` if a real fork)
+   - `worker_done` + tests green + class `wiring`/`scaffold` → `wdd complete --run <run_id> --task <id> --start-next`
+   - `worker_done` + class `dense` → `wdd review --run <run_id> --task <id>`; do not also inspect the diff yourself
+   - review `APPROVED` → `wdd complete --run <run_id> --task <id> --start-next`
+   - review `CHANGES_REQUESTED` → `orca orchestration send --to dispatch:<impl_dispatch> --subject "Review findings" --body "..."`
+   - failed/stopped → `wdd status --run <run_id>`, follow receipt `next`; no exploration tour
+3. **Inspect status?** When asked "is task X running?", run **one** `wdd status --run <run_id>` — never run python dumps, terminal greps, or git diff tours.
+4. **Do not** re-read the whole plan, `orca skills get --full`, worker transcripts, or local `git diff` on the happy path. Trust `worker_done` evidence; open artifacts only on failure.
+5. **Narration ≤ one short line** per turn (or silence). Specs are plan pointers — see [templates/worker-spec-template.md](templates/worker-spec-template.md).
+6. **Need auth/models?** `wdd agents` / `wdd models` only — never raw `account list --json` or `agent-context`.
 
 ---
 

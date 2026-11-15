@@ -9,7 +9,6 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SKILL_DIR="$REPO_ROOT/skills/worker-driven-development"
 SKILL_FILE="$SKILL_DIR/SKILL.md"
 MATRIX_FILE="$SKILL_DIR/references/agent-matrix.md"
-CATALOG_FILE="$SKILL_DIR/references/model-catalog.yaml"
 TEMPLATE_FILE="$SKILL_DIR/templates/worker-spec-template.md"
 WDD="$SKILL_DIR/scripts/wdd"
 
@@ -19,10 +18,9 @@ echo "test-worker-driven-development: checking worker-driven-development skill"
 
 [ -f "$SKILL_FILE" ] || fail "SKILL.md missing at $SKILL_FILE"
 [ -f "$MATRIX_FILE" ] || fail "agent-matrix.md missing at $MATRIX_FILE"
-[ -f "$CATALOG_FILE" ] || fail "model-catalog.yaml missing at $CATALOG_FILE"
 [ -f "$TEMPLATE_FILE" ] || fail "worker-spec-template.md missing at $TEMPLATE_FILE"
 [ -x "$WDD" ] || [ -f "$WDD" ] || fail "scripts/wdd missing"
-for s in wdd-boot.sh list-model-catalog.sh refresh-model-catalog.sh agents-brief.sh ready-brief.sh workers-brief.sh; do
+for s in wdd-boot.sh list-models.sh wdd-config.sh status-brief.sh complete-brief.sh check-brief.sh review-brief.sh agents-brief.sh ready-brief.sh workers-brief.sh; do
   [ -f "$SKILL_DIR/scripts/$s" ] || fail "missing skill script $s"
 done
 
@@ -45,17 +43,9 @@ for agent in "codex" "claude" "antigravity"; do
     || fail "agent-matrix.md does not document '$agent'"
 done
 
-# --- Model catalog + no-discovery rule --------------------------------------
+# --- No discovery tours rule ------------------------------------------------
 grep -q "Dispatch without a discovery tour" "$SKILL_FILE" \
   || fail "SKILL.md must ban discovery tours before worker-start"
-grep -q "model-catalog.yaml" "$SKILL_FILE" \
-  || fail "SKILL.md must point at model-catalog.yaml"
-for family in antigravity claude cursor opencode; do
-  grep -q "^${family}:" "$CATALOG_FILE" \
-    || fail "model-catalog.yaml missing family '$family'"
-done
-grep -q "orca models list" "$CATALOG_FILE" \
-  || fail "catalog should document upstream orca models list wish"
 
 # --- Lean coordinator + selective review + wdd CLI --------------------------
 grep -q "Lean coordinator" "$SKILL_FILE" \
@@ -64,6 +54,16 @@ grep -q "one action" "$SKILL_FILE" \
   || fail "SKILL.md must require one action per wakeup then end turn"
 grep -q "scripts/wdd" "$SKILL_FILE" \
   || fail "SKILL.md must point at scripts/wdd"
+grep -q "wdd status" "$SKILL_FILE" \
+  || fail "SKILL.md must document wdd status"
+grep -q "wdd complete" "$SKILL_FILE" \
+  || fail "SKILL.md must document wdd complete"
+grep -q "wdd review" "$SKILL_FILE" \
+  || fail "SKILL.md must document wdd review"
+grep -q "wdd check" "$SKILL_FILE" \
+  || fail "SKILL.md must document wdd check"
+grep -q "wdd config" "$SKILL_FILE" \
+  || fail "SKILL.md must document wdd config"
 grep -q "Selective review" "$SKILL_FILE" \
   || fail "SKILL.md must document Selective review"
 for class in wiring scaffold dense; do
