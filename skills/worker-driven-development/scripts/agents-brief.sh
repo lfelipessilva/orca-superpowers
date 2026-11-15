@@ -20,6 +20,10 @@ import json, os, sys
 as_json = os.environ.get("WDD_AS_JSON") == "1"
 ok_only = os.environ.get("WDD_OK_ONLY") == "1"
 d = json.load(sys.stdin)
+if not d.get("ok", True) and "error" in d:
+    if as_json:
+        print(json.dumps({}))
+    sys.exit(0)
 result = d.get("result", d)
 agents = {}
 for k, v in result.items():

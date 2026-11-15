@@ -42,14 +42,14 @@ orca, scripts, run_id, task_id, status, result, start_next_str, agent_override, 
 start_next = start_next_str == "1"
 
 def run_cmd(argv):
+    p = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if p.returncode != 0:
+        err_msg = p.stderr.strip() or p.stdout.strip()
+        sys.exit(f"orca command failed ({' '.join(argv)}):\n{err_msg}")
     try:
-        out = subprocess.check_output(argv, text=True, stderr=subprocess.DEVNULL)
-        try:
-            return json.loads(out)
-        except Exception:
-            return {"raw": out}
-    except subprocess.CalledProcessError as e:
-        sys.exit(f"orca command failed: {' '.join(argv)}\n{e}")
+        return json.loads(p.stdout)
+    except Exception:
+        return {"raw": p.stdout}
 
 # 1. Update task status (using the correct --id flag)
 update_argv = [orca, "orchestration", "task-update", "--run", run_id, "--id", task_id, "--status", status]
@@ -73,6 +73,9 @@ if not ready_tasks:
     print("start-next: no newly ready tasks.")
     sys.exit(0)
 
+# Build map of task IDs to titles to distinguish reviews from implementation tasks
+task_title_map = {t.get("id") or t.get("taskId"): (t.get("title") or "") for t in all_tasks}
+
 # Determine agent to use:
 # 1) explicit agent override
 # 2) agent from previous non-review worker
@@ -85,8 +88,9 @@ if not chosen_agent:
     for w in reversed(workers):
         ag = w.get("agent")
         tid = w.get("taskId") or ""
-        # Skip review workers
-        if ag and "review" not in tid.lower():
+        title = task_title_map.get(tid, "")
+        # Skip review workers by checking title
+        if ag and not title.lower().startswith("review"):
             chosen_agent = ag
             break
 if not chosen_agent:

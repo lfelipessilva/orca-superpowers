@@ -147,8 +147,11 @@ scripts_dir = os.environ.get("WDD_SCRIPTS_DIR", "")
 config_sh = os.path.join(scripts_dir, "wdd-config.sh") if scripts_dir else ""
 
 def sanitize_agent_flags(ag, mod, eff):
+    ag = (ag or "").lower().strip()
     if not config_sh or not os.path.exists(config_sh):
         res = [f"--agent {ag}"]
+        if not mod and ag == "antigravity" and eff:
+            mod = "gemini-3.8-flash"
         if mod: res.append(f"--model {mod}")
         if eff and ag != "cursor": res.append(f"--effort {eff}")
         return " ".join(res)

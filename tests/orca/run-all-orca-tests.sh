@@ -16,6 +16,7 @@ test_scripts=(
   "$SCRIPT_DIR/test-wdd-complete.sh"
   "$SCRIPT_DIR/test-wdd-check.sh"
   "$SCRIPT_DIR/test-wdd-review.sh"
+  "$SCRIPT_DIR/test-review-findings.sh"
   "$SCRIPT_DIR/test-tool-mapping.sh"
   "$SCRIPT_DIR/test-using-orca-worktrees.sh"
   "$SCRIPT_DIR/test-worker-driven-development.sh"

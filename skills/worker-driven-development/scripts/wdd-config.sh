@@ -10,8 +10,9 @@ SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG_HOME="${WDD_CONFIG_DIR:-$HOME/.config/wdd}"
 GLOBAL_CONFIG="$CONFIG_HOME/config.json"
 
-# Local config location
-LOCAL_DIR="${WDD_LOCAL_DIR:-$(pwd)}"
+# Local config location: find repo root if inside a git tree, else pwd
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+LOCAL_DIR="${WDD_LOCAL_DIR:-$REPO_ROOT}"
 LOCAL_CONFIG="$LOCAL_DIR/.wddrc"
 
 python3 - "$GLOBAL_CONFIG" "$LOCAL_CONFIG" "$@" <<'PY'
@@ -58,12 +59,22 @@ CLASS_EFFORTS = {
 }
 
 def load_json(p: Path) -> dict:
-    if p.exists():
-        try:
-            return json.loads(p.read_text())
-        except Exception:
-            return {}
-    return {}
+    if not p.exists():
+        return {}
+    text = p.read_text().strip()
+    if not text:
+        return {}
+    try:
+        return json.loads(text)
+    except Exception:
+        data = {}
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            set_nested(data, k.strip(), v.strip())
+        return data
 
 def save_json(p: Path, data: dict):
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -89,6 +100,8 @@ def set_nested(d: dict, key: str, val):
     curr[parts[-1]] = val
 
 def resolve_val(agent: str, field: str, explicit: str = ""):
+    agent = (agent or "").lower().strip()
+    field = (field or "").lower().strip()
     if explicit:
         return explicit
     # Check env var: e.g. WDD_MODEL_CURSOR
@@ -143,6 +156,8 @@ elif cmd == "get":
             val = resolve_val(parts[0], parts[1])
         else:
             val = get_nested(load_json(local_file), key) or get_nested(load_json(global_file), key)
+            if val is None and key.lower() in BUILTIN_DEFAULTS:
+                val = json.dumps(BUILTIN_DEFAULTS[key.lower()])
     if val is not None:
         print(val)
 
@@ -166,7 +181,7 @@ elif cmd == "resolve-model":
     i = 1
     while i < len(args):
         if args[i] == "--agent" and i + 1 < len(args):
-            agent = args[i + 1]
+            agent = args[i + 1].lower().strip()
             i += 2
         elif args[i] == "--model" and i + 1 < len(args):
             override = args[i + 1]
@@ -184,7 +199,7 @@ elif cmd == "resolve-effort":
     i = 1
     while i < len(args):
         if args[i] == "--agent" and i + 1 < len(args):
-            agent = args[i + 1]
+            agent = args[i + 1].lower().strip()
             i += 2
         elif args[i] == "--effort" and i + 1 < len(args):
             override = args[i + 1]
@@ -206,7 +221,7 @@ elif cmd == "sanitize-flags":
     i = 1
     while i < len(args):
         if args[i] == "--agent" and i + 1 < len(args):
-            agent = args[i + 1]
+            agent = args[i + 1].lower().strip()
             i += 2
         elif args[i] == "--model" and i + 1 < len(args):
             model = args[i + 1]

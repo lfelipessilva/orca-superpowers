@@ -29,7 +29,7 @@ case "$cmd" in
   config) exec bash "$SCRIPTS/wdd-config.sh" "$@" ;;
   agents) exec bash "$SCRIPTS/agents-brief.sh" "$@" ;;
   ready) exec bash "$SCRIPTS/ready-brief.sh" "$@" ;;
-  complete) exec bash "$SCRIPTS/complete-brief.sh" "$@" ;;
+  complete|task-update) exec bash "$SCRIPTS/complete-brief.sh" "$@" ;;
   review) exec bash "$SCRIPTS/review-brief.sh" "$@" ;;
   check) exec bash "$SCRIPTS/check-brief.sh" "$@" ;;
   workers) exec bash "$SCRIPTS/workers-brief.sh" "$@" ;;

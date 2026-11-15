@@ -39,14 +39,14 @@ import json, os, re, shlex, subprocess, sys
 orca, scripts, run_id, task_id, reviewer_override, worktree, base_ref, head_ref = sys.argv[1:9]
 
 def run_cmd(argv):
+    p = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if p.returncode != 0:
+        err_msg = p.stderr.strip() or p.stdout.strip()
+        sys.exit(f"orca command failed ({' '.join(argv)}):\n{err_msg}")
     try:
-        out = subprocess.check_output(argv, text=True, stderr=subprocess.DEVNULL)
-        try:
-            return json.loads(out)
-        except Exception:
-            return {"raw": out}
-    except subprocess.CalledProcessError as e:
-        sys.exit(f"orca command failed: {' '.join(argv)}\n{e}")
+        return json.loads(p.stdout)
+    except Exception:
+        return {"raw": p.stdout}
 
 # 1. Inspect task title
 tasks_res = run_cmd([orca, "orchestration", "task-list", "--run", run_id, "--json"])
