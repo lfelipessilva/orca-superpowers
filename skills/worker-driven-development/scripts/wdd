@@ -21,7 +21,7 @@ shift || true
 case "$cmd" in
   path) echo "$SCRIPTS" ;;
   boot) exec bash "$SCRIPTS/wdd-boot.sh" "$@" ;;
-  models) exec bash "$SCRIPTS/list-model-catalog.sh" "$@" ;;
+  models) exec bash "$SCRIPTS/list-models.sh" "$@" ;;
   config) exec bash "$SCRIPTS/wdd-config.sh" "$@" ;;
   agents) exec bash "$SCRIPTS/agents-brief.sh" "$@" ;;
   ready) exec bash "$SCRIPTS/ready-brief.sh" "$@" ;;
