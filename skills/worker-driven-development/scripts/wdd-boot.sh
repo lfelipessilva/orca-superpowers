@@ -46,6 +46,7 @@ fi
 export WDD_PLAN="$PLAN" WDD_AGENT="$AGENT" WDD_MODEL="$MODEL" WDD_EFFORT="$EFFORT"
 export WDD_WORKTREE="$WORKTREE" WDD_DEPS_MODE="$DEPS_MODE" WDD_DRY_RUN="$DRY_RUN"
 export WDD_NO_START="$NO_START" WDD_OBJECTIVE="${OBJECTIVE:-Implement plan $PLAN}" WDD_ORCA="$ORCA_BIN"
+export WDD_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 python3 <<'PY'
 import json, os, re, subprocess, sys
@@ -142,19 +143,40 @@ if no_start:
     print("wdd-boot: --no-start; tasks created only")
     sys.exit(0)
 
+scripts_dir = os.environ.get("WDD_SCRIPTS_DIR", "")
+config_sh = os.path.join(scripts_dir, "wdd-config.sh") if scripts_dir else ""
+
+def sanitize_agent_flags(ag, mod, eff):
+    if not config_sh or not os.path.exists(config_sh):
+        res = [f"--agent {ag}"]
+        if mod: res.append(f"--model {mod}")
+        if eff and ag != "cursor": res.append(f"--effort {eff}")
+        return " ".join(res)
+    cmd = ["bash", config_sh, "sanitize-flags", "--agent", ag]
+    if mod:
+        cmd.extend(["--model", mod])
+    if eff:
+        cmd.extend(["--effort", eff])
+    try:
+        return subprocess.check_output(cmd, text=True).strip()
+    except Exception:
+        res = [f"--agent {ag}"]
+        if mod: res.append(f"--model {mod}")
+        if eff and ag != "cursor": res.append(f"--effort {eff}")
+        return " ".join(res)
+
+import shlex
+
 start_ns = [t["n"] for t in tasks] if deps_mode == "none" else ([tasks[0]["n"]] if tasks else [])
 by_n = {t["n"]: t for t in tasks}
 for n in start_ns:
     t = by_n[n]
     tid = id_map[n]
     use_effort = effort_override or t["effort_hint"]
+    sanitized = sanitize_agent_flags(agent, model, use_effort)
+    san_argv = shlex.split(sanitized)
     argv = [orca, "orchestration", "worker-start", "--run", run_id, "--task", tid,
-            "--worktree", worktree, "--agent", agent]
-    if model:
-        argv.extend(["--model", model])
-    if use_effort:
-        argv.extend(["--effort", use_effort])
-    argv.append("--json")
+            "--worktree", worktree] + san_argv + ["--json"]
     print(f"worker-start task={tid} class={t['class']}")
     run(argv)
 
