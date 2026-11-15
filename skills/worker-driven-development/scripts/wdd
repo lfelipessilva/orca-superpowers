@@ -6,6 +6,7 @@
 #   wdd agents [--json]          # brief auth map (not full account list)
 #   wdd ready --run RUN_ID       # ready tasks only
 #   wdd workers --run RUN_ID     # compact worker rows
+#   wdd status --run RUN_ID      # compact run & worker summary (<6 lines)
 #   wdd config [set|get|list]    # persistent or local defaults
 #   wdd path                     # print this skill's scripts dir
 set -euo pipefail
@@ -15,7 +16,7 @@ SCRIPTS="$SKILL_DIR/scripts"
 ORCA_BIN="${ORCA_CLI_COMMAND:-orca}"
 
 cmd="${1:-}"
-[[ -n "$cmd" ]] || { sed -n '2,12p' "$0"; exit 2; }
+[[ -n "$cmd" ]] || { sed -n '2,13p' "$0"; exit 2; }
 shift || true
 
 case "$cmd" in
@@ -26,6 +27,7 @@ case "$cmd" in
   agents) exec bash "$SCRIPTS/agents-brief.sh" "$@" ;;
   ready) exec bash "$SCRIPTS/ready-brief.sh" "$@" ;;
   workers) exec bash "$SCRIPTS/workers-brief.sh" "$@" ;;
-  -h|--help|help) sed -n '2,12p' "$0" ;;
-  *) echo "unknown command: $cmd (try: boot models agents ready workers config path)" >&2; exit 2 ;;
+  status) exec bash "$SCRIPTS/status-brief.sh" "$@" ;;
+  -h|--help|help) sed -n '2,13p' "$0" ;;
+  *) echo "unknown command: $cmd (try: boot models agents ready workers status config path)" >&2; exit 2 ;;
 esac
