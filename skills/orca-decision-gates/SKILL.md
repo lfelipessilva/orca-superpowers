@@ -43,12 +43,14 @@ When Task 2 is gated:
 
 ## CLI Reference
 
+Use the low-token `wdd gate` commands rather than raw Orca dumps:
+
 ### 1. Creating a Decision Gate
 
 Attach the gate directly to the affected task:
 
 ```bash
-orca orchestration gate-create \
+wdd gate create \
   --task <task_id> \
   --question "<Clear description of the choice or approval needed>" \
   --options '["Option A: ...", "Option B: ..."]'
@@ -61,7 +63,7 @@ orca orchestration gate-create \
 To inspect pending gates in the current run:
 
 ```bash
-orca orchestration gate-list
+wdd gate list [--run <run_id>]
 ```
 
 ### 3. Resolving a Decision Gate
@@ -69,9 +71,9 @@ orca orchestration gate-list
 Gates are typically resolved directly by the user clicking an option in the Orca interface. They can also be resolved via CLI:
 
 ```bash
-orca orchestration gate-resolve \
-  --gate <gate_id> \
-  --choice "<chosen_option>"
+wdd gate resolve \
+  --id <gate_id> \
+  --resolution "<chosen_option>"
 ```
 
 ---
@@ -82,9 +84,9 @@ When you create a decision gate:
 1. Record the gate creation in your coordinator summary.
 2. Check if other tasks in the DAG are ready:
    ```bash
-   orca orchestration task-list --ready --brief
+   wdd ready --run <run_id>
    ```
 3. Dispatch any ready unblocked tasks.
-4. **End your turn**. Do NOT poll `gate-list`.
+4. **End your turn**. Do NOT poll `gate list`.
 5. Orca will wake the coordinator as soon as the gate is resolved.
 6. Upon wake, inspect the chosen option and resume or unblock the gated task.

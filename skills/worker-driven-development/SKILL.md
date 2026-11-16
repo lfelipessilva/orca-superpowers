@@ -9,7 +9,9 @@ Execute implementation plans in Orca by orchestrating supervised workers across 
 
 **Core principle:** Fresh worker per task + Cross-agent review (e.g. Codex implements, Claude reviews) + Non-blocking Decision Gates = fast, reliable, industrial-grade delivery.
 
-**Coordinator CLI (prefer scripts over raw Orca dumps):** after `install.sh --global`,
+**Coordinator CLI — use `wdd` for EVERY orchestration action.** Never call raw `orca orchestration` commands; the scripts compress output and save tokens.
+
+After `install.sh --global`:
 
 ```bash
 WDD=~/.agents/skills/worker-driven-development/scripts/wdd
@@ -19,6 +21,13 @@ bash "$WDD" status --run <run_id>         # compact run & worker summary (<6 lin
 bash "$WDD" check --run <run_id>          # 1-line event summary on wakeup
 bash "$WDD" complete --run <run_id> --task <id> [--start-next]
 bash "$WDD" review --run <run_id> --task <id>  # automated cross-agent review
+bash "$WDD" send --run <run_id> --to dispatch:<id> --subject "…" --body "…"
+bash "$WDD" reply --id <msg_id> --body "…"
+bash "$WDD" gate create --task <id> --question "…" [--options '[…]']
+bash "$WDD" show --dispatch <id>          # compact worker state (<5 lines)
+bash "$WDD" read --dispatch <id>          # bounded worker output tail (<25 lines)
+bash "$WDD" release --dispatch <id>       # release worker terminal
+bash "$WDD" task-list --run <run_id>      # compact task listing
 bash "$WDD" config set <agent>.model <id> [--global|--local]
 bash "$WDD" models --agent antigravity --ids-only
 bash "$WDD" agents [--ok-only]             # NOT raw account list --json
@@ -37,12 +46,12 @@ Your job is dispatch, not implementation. Minimize tokens every turn.
 1. **Bootstrap once** with `wdd boot …`. Then **end turn**.
 2. **On wakeup — one action, then end turn.** Map the event and stop:
    - Check the event: `wdd check --run <run_id>`
-   - `ask` → `orca orchestration reply --id <id> --body "..."` (or `gate-create` if a real fork)
+   - `ask` → `wdd reply --id <msg_id> --body "..."` (or `wdd gate create` if a real fork)
    - `worker_done` + tests green + class `wiring`/`scaffold` → `wdd complete --run <run_id> --task <id> --start-next`
    - `worker_done` + class `dense` → `wdd review --run <run_id> --task <id>`; do not also inspect the diff yourself
    - review `APPROVED` → `wdd complete --run <run_id> --task <id> --start-next`
-   - review `CHANGES_REQUESTED` → `orca orchestration send --to dispatch:<impl_dispatch> --subject "Review findings" --body "..."`
-   - failed/stopped → `wdd status --run <run_id>`, follow receipt `next`; no exploration tour
+   - review `CHANGES_REQUESTED` → `wdd send --run <run_id> --to dispatch:<impl_dispatch> --subject "Review findings" --body "..."`
+   - failed/stopped → `wdd status --run <run_id>`. If diagnosing: `wdd read --dispatch <id>` (tail <25 lines) or `wdd show --dispatch <id>`, then unblock via `wdd send` or restart. Never dump raw transcripts, full worker-show, or load recovery reference docs.
 3. **Inspect status?** When asked "is task X running?", run **one** `wdd status --run <run_id>` — never run python dumps, terminal greps, or git diff tours.
 4. **Do not** re-read the whole plan, `orca skills get --full`, worker transcripts, or local `git diff` on the happy path. Trust `worker_done` evidence; open artifacts only on failure.
 5. **Narration ≤ one short line** per turn (or silence). Specs are plan pointers — see [templates/worker-spec-template.md](templates/worker-spec-template.md).
@@ -102,20 +111,17 @@ Manual equivalent (avoid unless boot cannot run): `run-create` → `task-create`
 Ambiguity / high-risk consent → `gate-create` on that task only; other ready tasks keep running:
 
 ```bash
-orca orchestration gate-create \
-  --task <task_id> \
-  --question "Option A or B?" \
-  --options '["Option A", "Option B"]'
+wdd gate create --task <task_id> --question "Option A or B?" --options '["Option A", "Option B"]'
 ```
 
 ---
 
 ## Completion & Teardown
 
-When `orca orchestration task-list` shows all tasks completed:
+When `wdd task-list --run <run_id>` shows all tasks completed:
 1. Run full verification with `superpowers:verification-before-completion`.
 2. Release worker terminal allocations:
    ```bash
-   orca orchestration worker-release --terminal <handle>
+   wdd release --dispatch <dispatch_id>
    ```
 3. Complete development branch with `superpowers:finishing-a-development-branch`.

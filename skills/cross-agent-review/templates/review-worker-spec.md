@@ -1,6 +1,6 @@
 # Cross-Agent Reviewer Worker Specification Template
 
-Use this template when dispatching a code reviewer worker via `orca orchestration worker-start`.
+Use this template when dispatching a code reviewer worker via `wdd review` (or `worker-start`).
 
 ---
 

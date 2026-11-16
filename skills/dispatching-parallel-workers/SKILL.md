@@ -85,5 +85,5 @@ As each worker settles:
 3. Run the integrated test suite to verify no cross-module regression.
 4. Release the settled worker terminal:
    ```bash
-   orca orchestration worker-release --terminal <terminal_handle>
+   wdd release --terminal <terminal_handle>
    ```

@@ -47,19 +47,17 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 ## Step 2: Dispatch Reviewer Worker
 
-Dispatch the review worker using `--worktree current` so it inspects the exact working copy without moving HEAD:
+Dispatch the review using the `wdd review` script, which handles agent selection, spec building, and worker start automatically:
 
 ```bash
-orca orchestration worker-start \
-  --spec "$(cat <<EOF
-[Paste filled templates/review-worker-spec.md with BASE_SHA and HEAD_SHA]
-EOF
-)" \
-  --worktree current \
-  --agent <reviewer_agent>
+wdd review --run <run_id> --task <task_id>
 ```
 
-*(Ensure `<reviewer_agent>` is different from the implementer agent).*
+The script picks a heterogeneous reviewer (different agent family from the implementer), creates a review sub-task with `--parent`, and starts the worker. To override the reviewer agent:
+
+```bash
+wdd review --run <run_id> --task <task_id> --reviewer claude
+```
 
 ---
 
@@ -80,18 +78,13 @@ When Orca wakes you with the reviewer's `worker_done`:
 1. Settle the review task.
 2. Mark the parent task completed in the DAG:
    ```bash
-   orca orchestration task-update --task <task_id> --status completed
-   ```
-3. Release reviewer terminal:
-   ```bash
-   orca orchestration worker-release --terminal <reviewer_term>
+   wdd complete --run <run_id> --task <task_id> --start-next
    ```
 
 ### If `VERDICT: CHANGES_REQUESTED`
 1. Re-open or steer the implementer worker with the feedback:
    ```bash
-   orca orchestration send \
-     --to dispatch:<implementer_dispatch_id> \
+   wdd send --run <run_id> --to dispatch:<implementer_dispatch_id> \
      --subject "Review feedback for task <task_id>" \
      --body "<Specific review findings>"
    ```

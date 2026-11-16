@@ -34,20 +34,23 @@ workers is `--agent cursor --model <provider-model-id>`.
 
 ## Action Mapping Table
 
-| Action skills request | Orca equivalent |
-|-----------------------|-----------------|
-| Dispatch implementer / worker | `orca orchestration worker-start --spec "<spec>" --worktree current\|new-child --agent <agent>` |
-| Track tasks & plan dependencies | `orca orchestration run-create --objective "<goal>"` followed by `orca orchestration task-create --spec "<task>" [--deps '<json_array>']` |
-| Check ready tasks in DAG | `orca orchestration task-list --ready --brief` |
-| Parallel dispatch | `orca orchestration worker-start --spec "<spec>" --worktree new-child --name <domain> --agent <agent>` |
-| Request code review (cross-agent) | `orca orchestration worker-start --spec "<review_spec>" --worktree current --agent <reviewer_agent>` |
-| Human clarification / Permission gate | `orca orchestration gate-create --task <task_id> --question "<text>" [--options '<json_array>']` |
-| Resolve decision gate | `orca orchestration gate-resolve --gate <gate_id> --choice "<selected>"` (or via Orca UI) |
-| Steer or message a worker | `orca orchestration send --to dispatch:<dispatch_id> --subject "<topic>" --body "<message>"` |
-| Answer a worker's question | `orca orchestration reply --id <message_id> --body "<answer>"` |
-| Worktree isolation | `orca worktree create` or `--worktree new-child --name <short-name>` |
-| Worktree metadata & comments | `orca worktree set --worktree active --comment "<phase/status>"` |
-| Release settled worker resources | `orca orchestration worker-release --terminal <handle>` |
+Prefer the low-token `wdd` helpers (`~/.agents/skills/worker-driven-development/scripts/wdd`) over raw dumps:
+
+| Action skills request | WDD helper (preferred) | Native Orca primitive |
+|-----------------------|------------------------|-----------------------|
+| Dispatch implementer / worker | `wdd boot --plan <plan> --agent <agent>` or `wdd complete --run <id> --task <id> --start-next` | `orca orchestration worker-start --spec "<spec>" --worktree current\|new-child --agent <agent>` |
+| Track tasks & plan dependencies | `wdd boot --plan <plan> --agent <agent>` or `wdd task-list --run <run_id>` | `orca orchestration run-create --objective "<goal>"` followed by `orca orchestration task-create --spec "<task>" [--deps '<json_array>']` |
+| Check ready tasks in DAG | `wdd ready --run <run_id>` | `orca orchestration task-list --ready --brief` |
+| Parallel dispatch | `wdd workers --run <run_id>` | `orca orchestration worker-start --spec "<spec>" --worktree new-child --name <domain> --agent <agent>` |
+| Request code review (cross-agent) | `wdd review --run <run_id> --task <task_id>` | `orca orchestration worker-start --spec "<review_spec>" --worktree current --agent <reviewer_agent>` |
+| Human clarification / Permission gate | `wdd gate create --task <task_id> --question "<text>" [--options '<json_array>']` | `orca orchestration gate-create --task <task_id> --question "<text>" [--options '<json_array>']` |
+| Resolve decision gate | `wdd gate resolve --id <gate_id> --resolution "<selected>"` | `orca orchestration gate-resolve --id <gate_id> --resolution "<selected>"` |
+| Steer or message a worker | `wdd send --run <run_id> --to dispatch:<dispatch_id> --subject "<topic>" --body "<message>"` | `orca orchestration send --to dispatch:<dispatch_id> --subject "<topic>" --body "<message>"` |
+| Answer a worker's question | `wdd reply --id <message_id> --body "<answer>"` | `orca orchestration reply --id <message_id> --body "<answer>"` |
+| Inspect worker output / status | `wdd status --run <run_id>` / `wdd read --dispatch <id>` / `wdd show --dispatch <id>` | `orca orchestration worker-show` / `worker-read` |
+| Worktree isolation | `orca worktree create` or `--worktree new-child --name <short-name>` | `orca worktree create` |
+| Worktree metadata & comments | `orca worktree set --worktree active --comment "<phase/status>"` | `orca worktree set` |
+| Release settled worker resources | `wdd release --dispatch <dispatch_id>` | `orca orchestration worker-release --terminal <handle>` |
 
 ## Cross-Agent Support
 
@@ -64,10 +67,10 @@ Specify `--agent <id>` explicitly on `worker-start` to match the best agent to t
 When an implementation task encounters an ambiguity, architectural fork, or requires human consent for sensitive operations, **do not stall the entire session**.
 1. Create a decision gate tied to that specific task:
    ```bash
-   orca orchestration gate-create --task <task_id> --question "<question>" --options '["Option A", "Option B"]'
+   wdd gate create --task <task_id> --question "<question>" --options '["Option A", "Option B"]'
    ```
 2. Any independent tasks in the DAG continue executing without interruption.
-3. The human partner can resolve the gate via Orca's UI or via `orca orchestration gate-resolve`.
+3. The human partner can resolve the gate via Orca's UI or via `wdd gate resolve --id <gate_id> --resolution "<selected>"`.
 4. Orca automatically wakes the coordinator when the gate is resolved.
 
 ## Reactive Wakeup Rule

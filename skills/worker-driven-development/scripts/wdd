@@ -10,6 +10,13 @@
 #   wdd check --run RUN_ID       # 1-line event summary
 #   wdd workers --run RUN_ID     # compact worker rows
 #   wdd status --run RUN_ID      # compact run & worker summary (<6 lines)
+#   wdd send --run RUN_ID --to DEST --subject SUBJ [--body TEXT]
+#   wdd reply --id MSG_ID --body TEXT
+#   wdd gate create|resolve|list # decision gates
+#   wdd show --dispatch ID       # compact worker state (<5 lines)
+#   wdd read --dispatch ID       # bounded worker output tail (<25 lines)
+#   wdd release --dispatch ID    # release worker terminal
+#   wdd task-list --run RUN_ID   # compact task listing
 #   wdd config [set|get|list]    # persistent or local defaults
 #   wdd path                     # print this skill's scripts dir
 set -euo pipefail
@@ -19,7 +26,7 @@ SCRIPTS="$SKILL_DIR/scripts"
 ORCA_BIN="${ORCA_CLI_COMMAND:-orca}"
 
 cmd="${1:-}"
-[[ -n "$cmd" ]] || { sed -n '2,16p' "$0"; exit 2; }
+[[ -n "$cmd" ]] || { sed -n '2,21p' "$0"; exit 2; }
 shift || true
 
 case "$cmd" in
@@ -34,6 +41,13 @@ case "$cmd" in
   check) exec bash "$SCRIPTS/check-brief.sh" "$@" ;;
   workers) exec bash "$SCRIPTS/workers-brief.sh" "$@" ;;
   status) exec bash "$SCRIPTS/status-brief.sh" "$@" ;;
-  -h|--help|help) sed -n '2,16p' "$0" ;;
-  *) echo "unknown command: $cmd (try: boot models agents ready complete review check workers status config path)" >&2; exit 2 ;;
+  send) exec bash "$SCRIPTS/send-brief.sh" "$@" ;;
+  reply) exec bash "$SCRIPTS/reply-brief.sh" "$@" ;;
+  gate) exec bash "$SCRIPTS/gate-brief.sh" "$@" ;;
+  show|worker-show) exec bash "$SCRIPTS/worker-show-brief.sh" "$@" ;;
+  read|worker-read) exec bash "$SCRIPTS/worker-read-brief.sh" "$@" ;;
+  release) exec bash "$SCRIPTS/release-brief.sh" "$@" ;;
+  task-list) exec bash "$SCRIPTS/task-list-brief.sh" "$@" ;;
+  -h|--help|help) sed -n '2,21p' "$0" ;;
+  *) echo "unknown command: $cmd (try: boot models agents ready complete review check workers status send reply gate show read release task-list config path)" >&2; exit 2 ;;
 esac
